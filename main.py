@@ -1,8 +1,19 @@
+import argparse
 import logging
+import fastapi
+import uvicorn
 from db import process_raw_data, prepare_db
+import views
 
 
-def main():
+api = fastapi.FastAPI()
+
+
+def configure_routing():
+    api.include_router(views.router)
+
+
+def load_and_prep_db():
     # start up the thing with:
     # (venv) $ python -i main.py
 
@@ -19,8 +30,17 @@ def main():
     truncate = True
     prepare_db(sql_db, table, out_file, truncate)
 
-    logger.debug("done!")
+    logger.debug("completed db setup")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--db", help="reload and prep database", action="store_true")
+    args = parser.parse_args()
+
+    if args.db:
+        load_and_prep_db()
+
+    configure_routing()
+
+    uvicorn.run(api, port=8888, host="127.0.0.1")
