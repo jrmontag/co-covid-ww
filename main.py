@@ -6,6 +6,9 @@ from db import process_raw_data, prepare_db
 import views
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 api = fastapi.FastAPI()
 
 
@@ -14,15 +17,10 @@ def configure_routing():
 
 
 def load_and_prep_db():
-    # start up the thing with:
-    # (venv) $ python -i main.py
-
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-
     # lots of hard-coded constants for now
-    in_file = "2022-11-17_ww.json"
-    out_file = "2022-11-17_ww.flat.json"
+    data_dir = "data"
+    in_file = f"{data_dir}/2022-11-17_ww.json"
+    out_file = f"{data_dir}/2022-11-17_ww.flat.json"
     process_raw_data(in_file, out_file)
 
     sql_db = "wastewater.db"
@@ -35,10 +33,10 @@ def load_and_prep_db():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--db", help="reload and prep database", action="store_true")
+    parser.add_argument("--build_db", help="reload and prep database", action="store_true")
     args = parser.parse_args()
 
-    if args.db:
+    if args.build_db:
         load_and_prep_db()
 
     configure_routing()
