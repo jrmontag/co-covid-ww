@@ -1,3 +1,5 @@
+import logging
+import sqlite3
 import fastapi
 from fastapi import Depends
 from models.report import Report
@@ -6,8 +8,10 @@ from services import db
 
 router = fastapi.APIRouter()
 
-db_conn = db.get_connection("data/wastewater.db")
-
+try:
+    db_conn = db.get_connection("data/wastewater.db")
+except sqlite3.OperationalError as oe:
+    logging.error(f"DB error: {oe}")
 
 @router.get("/api/utilities")
 def utilities():
