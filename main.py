@@ -20,3 +20,5 @@ def configure_routing():
 if __name__ == "__main__":
     configure_routing()
     uvicorn.run(api, port=8888, host="127.0.0.1")
+else:
+    configure_routing()

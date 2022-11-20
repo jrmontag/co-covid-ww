@@ -34,7 +34,6 @@ mkdir /apps/logs/wastewater_api
 mkdir /apps/logs/wastewater_api/app_log
 # chmod 777 /apps/logs/wastewater_api
 setfacl -m u:apiuser:rwx /apps/logs/wastewater_api
-# cd /apps
 
 # Create a virtual env for the app.
 cd /apps
