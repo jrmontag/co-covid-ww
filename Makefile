@@ -5,6 +5,8 @@ PIP = $(VENV)/bin/pip
 run: $(VENV)/bin/activate
 	$(PYTHON) main.py
 
+db-and-run: $(VENV)/bin/activate
+	$(PYTHON) main.py --build_db
 
 $(VENV)/bin/activate: requirements.txt
 	python3 -m venv $(VENV)
@@ -18,4 +20,4 @@ deep-clean:
 	rm -rf __pycache__
 	rm -rf $(VENV)
 
-.PHONY: run clean deep-clean
+.PHONY: run db-and-run clean deep-clean

@@ -18,7 +18,3 @@ def index():
     """
     return fastapi.responses.HTMLResponse(content=body)
 
-
-@router.get("/api/utilities")
-def utilities():
-    return {"status": "TODO"}
