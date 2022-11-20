@@ -3,5 +3,3 @@ sqlite-utils
 python-dateutil
 fastapi
 uvicorn
-httpx
-jinja2
