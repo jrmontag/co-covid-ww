@@ -57,6 +57,7 @@ cp /apps/app_repo/server/units/wastewater.service /etc/systemd/system/
 systemctl start wastewater
 systemctl status wastewater
 systemctl enable wastewater
+# also: stop, restart, reload
 
 # Setup the public facing server (NGINX)
 apt install nginx

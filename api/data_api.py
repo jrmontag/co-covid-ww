@@ -1,5 +1,6 @@
 import logging
 import sqlite3
+from typing import Optional
 import fastapi
 from fastapi import Depends
 from models.report import Report
@@ -10,22 +11,20 @@ logger.setLevel(logging.DEBUG)
 
 router = fastapi.APIRouter()
 
-try:
-    db_conn = db.get_connection("data/wastewater.db")
-except sqlite3.OperationalError as oe:
-    logging.error(f"DB error: {oe}")
+db_conn: Optional[sqlite3.Connection] = db.get_connection("data/wastewater.db")
 
 
 @router.get("/api/utilities")
 def utilities():
-    try:
+    if db_conn:
         results = db.get_utilities(db_conn)
-    except sqlite3.OperationalError as oe:
-        logging.warning(f"database error: {oe}")
-        return fastapi.Response(
+        resp = {"utilities": results}
+    else:
+        logging.error("Database connection is missing")
+        # TODO: notify?
+        resp = fastapi.Response(
             content="Internal error. Please try again later.", status_code=500
         )
-    resp = {"result": {"utilities": results}}
     return resp
 
 

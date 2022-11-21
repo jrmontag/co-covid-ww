@@ -13,8 +13,8 @@ $(VENV)/bin/activate: requirements.txt
 	$(PIP) install -r requirements.txt
 
 clean: 
-	rm data/*.flat.json
 	rm data/*.db
+	rm data/*.flat.json
 
 deep-clean:
 	rm -rf __pycache__

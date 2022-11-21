@@ -13,7 +13,12 @@ logger.setLevel(logging.DEBUG)
 def fetch_data():
     # CDPHE portal data
     # https://data-cdphe.opendata.arcgis.com/datasets/CDPHE::cdphe-covid19-wastewater-dashboard-data/about
-    query = "https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services/CDPHE_COVID19_WW_Dashboard_Data_Publish/FeatureServer/0/query?where=1%3D1&outFields=*&outSR=4326&f=json"
+    query = (
+        "https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services/"
+        + "CDPHE_COVID19_WW_Dashboard_Data_Publish/FeatureServer/0/query?"
+        + "where=1%3D1&outFields=*&outSR=4326&f=json"
+    )
+    # write "2022-11-17_download.json" or similar
     pass
 
 
@@ -52,6 +57,7 @@ def prepare_db(
         f"loading {table=} into {database=} from {data_file=}, {'yes' if truncate else 'not'} dropping content"
     )
     db = Database(database)
+    # TODO: move existing `latest` to dated table
     db[table].insert_all(records=table_data, truncate=truncate)
 
     # MM/DD/YYY -> YYYY-MM-DD
@@ -64,12 +70,12 @@ def prepare_db(
 def load_and_prep_db():
     # lots of hard-coded constants for now
     data_dir = "data"
-    in_file = f"{data_dir}/2022-11-17_ww.json"
-    out_file = f"{data_dir}/2022-11-17_ww.flat.json"
+    in_file = f"{data_dir}/2022-11-17_download.json"
+    out_file = f"{data_dir}/2022-11-17_latest.json"
     process_raw_data(in_file, out_file)
 
     sql_db = f"{data_dir}/wastewater.db"
-    table = "2022-11-17"
+    table = "latest"
     truncate = True
     prepare_db(sql_db, table, out_file, truncate)
 
