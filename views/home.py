@@ -9,9 +9,9 @@ def index():
     body = """
     <html>
     <body style='padding: 10px;'>
-    <h1>📱-friendly CO COVID Wasterwater data</h1>
+    <h1>(eventually) 📱-friendly CO COVID Wasterwater data</h1>
     <div>
-    Try it: <a href='/api/utilities'>/api/utilities</a>
+    See available reporting utilities: <a href='/api/utilities'>/api/utilities</a>
     </div>
     </body>
     </html>
