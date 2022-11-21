@@ -12,10 +12,11 @@ logger.setLevel(logging.DEBUG)
 
 
 def get_connection(db_uri: str) -> Optional[sqlite3.Connection]:
-    # get the desired db connection (or flag that it doesn't exist)
     conn = sqlite3.connect(db_uri, check_same_thread=False)
-    test = conn.execute("SELECT * FROM sqlite_master").fetchall()
-    conn = None if len(test) == 0 else conn
+    # tables and indexs in the given db
+    entities = conn.execute("SELECT * FROM sqlite_master").fetchall()
+    if len(entities) == 0:
+        conn = None
     return conn
 
 
