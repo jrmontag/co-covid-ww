@@ -7,7 +7,6 @@ from models.report import Report
 from services import db
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 router = fastapi.APIRouter()
 
@@ -20,7 +19,7 @@ def utilities():
         results = db.get_utilities(db_conn)
         resp = {"utilities": results}
     else:
-        logging.error("Database connection is missing")
+        logger.error("Database connection is missing")
         # TODO: notify?
         resp = fastapi.Response(
             content="Internal error. Please try again later.", status_code=500
@@ -31,6 +30,7 @@ def utilities():
 @router.get("/api/samples/{utility}")
 def samples(report: Report = Depends()):
     msg = f"called /samples/utility with {report.utility=}, {report.start=}, {report.end=}"
+    logger.debug(f"Called /api/samples/{report.utility}")
     resp = fastapi.Response(content=msg, status_code=200)
     return resp
 

@@ -3,3 +3,5 @@ sqlite-utils
 python-dateutil
 fastapi
 uvicorn
+ipython
+requests

@@ -1,13 +1,28 @@
 import argparse
 import logging
+from pathlib import Path
 import fastapi
 import uvicorn
 from views import home
 from api import data_api
 
 
+def logging_location() -> str:
+    log_file = "app.log"
+    prod_loc = "/apps/logs/wastewater_api/app_log"
+    dev_loc = "data"
+    log_loc = Path(dev_loc) / log_file
+    if Path(prod_loc).exists():
+        log_loc = Path(prod_loc) / log_file
+    return str(log_loc)
+
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logging.basicConfig(
+    format="%(asctime)s : %(levelname)s : %(name)s : %(message)s",
+    filename=logging_location(),
+    level=logging.DEBUG,
+)
 
 api = fastapi.FastAPI()
 

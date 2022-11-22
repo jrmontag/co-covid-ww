@@ -8,7 +8,6 @@ from fastapi import Depends
 from models.report import Report
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 def get_connection(db_uri: str) -> Optional[sqlite3.Connection]:
@@ -16,6 +15,7 @@ def get_connection(db_uri: str) -> Optional[sqlite3.Connection]:
     # tables and indexs in the given db
     entities = conn.execute("SELECT * FROM sqlite_master").fetchall()
     if len(entities) == 0:
+        logger.warning("Database is present but empty")
         conn = None
     return conn
 
