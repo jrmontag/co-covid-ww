@@ -8,7 +8,7 @@ $(VENV)/bin/activate: requirements.txt
 	$(PIP) install -r requirements.txt
 
 data-update: $(VENV)/bin/activate
-	echo 'TODO'
+	$(PYTHON) tools/update_data.py
 
 run: $(VENV)/bin/activate
 	$(PYTHON) main.py
