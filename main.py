@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(
     format="%(asctime)s : %(levelname)s : %(name)s : %(message)s",
     filename=logging_location(),
-    level=logging.DEBUG,
+    level=logging.INFO,
 )
 
 api = fastapi.FastAPI()

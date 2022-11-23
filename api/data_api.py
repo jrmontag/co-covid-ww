@@ -20,7 +20,6 @@ def utilities():
         resp = {"utilities": results}
     else:
         logger.error("Database connection is missing")
-        # TODO: notify?
         resp = fastapi.Response(
             content="Internal error. Please try again later.", status_code=500
         )

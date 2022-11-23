@@ -1,3 +1,4 @@
+wheel
 datasette
 sqlite-utils
 python-dateutil

@@ -130,7 +130,7 @@ def update_db_from_file(download: str) -> None:
 
 
 if __name__ == "__main__":
-    logger.info("Starting new run of data check/fetch")
+    logger.info("> Starting new run of data check/fetch")
     latest_local_update: Optional[date] = get_latest_local_update()
     latest_portal_update: date = get_latest_portal_update()
 
