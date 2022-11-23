@@ -20,11 +20,9 @@ ufw allow 80
 ufw allow 443
 ufw enable
 
-
 apt install acl -y
 useradd -M apiuser
 usermod -L apiuser
-
 
 # Web app file structure
 mkdir /apps
@@ -33,7 +31,7 @@ mkdir /apps/logs
 mkdir /apps/logs/wastewater_api
 mkdir /apps/logs/wastewater_api/app_log
 # chmod 777 /apps/logs/wastewater_api
-setfacl -m u:apiuser:rwx /apps/logs/wastewater_api
+setfacl -R -m u:apiuser:rwx /apps/logs/wastewater_api
 
 # Create a virtual env for the app.
 cd /apps
@@ -69,10 +67,14 @@ cp /apps/app_repo/server/nginx/wastewater.nginx /etc/nginx/sites-enabled/
 update-rc.d nginx enable
 service nginx restart
 
-
 # Optionally add SSL support via Let's Encrypt:
 # https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-18-04
 
 add-apt-repository ppa:certbot/certbot
 apt install python3-certbot-nginx
 certbot --nginx -d wastewater.jrmontag.xyz
+
+# Set data generation process in root crontab
+crontab -e
+# m h  dom mon dow   command
+15 0 * * * cd /apps/app_repo && source ../venv/bin/activate && python tools/update_data.py
