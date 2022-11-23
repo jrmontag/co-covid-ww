@@ -13,11 +13,15 @@ def index():
     <div>
     See available reporting utilities: <a href='/api/utilities'>/api/utilities</a>
     </div>
+    
     <div>
-    Check Denver-area wastewater measurements: <a href='/api/samples'>/api/samples</a>
+    Check recent Denver-area wastewater measurements: <a href='/api/samples'>/api/samples</a>
+    </div>
+    
+    <div>
+    Check August Boulder-area wastewater measurements: <a href='/api/samples?utility=Boulder&start=2022-08-01&end=2022-08-31'>/api/samples</a>
     </div>
     </body>
     </html>
     """
     return fastapi.responses.HTMLResponse(content=body)
-
