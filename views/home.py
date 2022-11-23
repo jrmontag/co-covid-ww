@@ -13,6 +13,9 @@ def index():
     <div>
     See available reporting utilities: <a href='/api/utilities'>/api/utilities</a>
     </div>
+    <div>
+    Check Denver-area wastewater measurements: <a href='/api/samples'>/api/samples</a>
+    </div>
     </body>
     </html>
     """
