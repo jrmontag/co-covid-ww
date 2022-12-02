@@ -18,7 +18,7 @@ UTILITY_COL = "Utility"
 
 def get_connection(db_uri: str) -> Optional[sqlite3.Connection]:
     conn = sqlite3.connect(db_uri, check_same_thread=False)
-    # tables and indexs in the given db
+    # metadata table that includes tables and indexs in the db
     entities = conn.execute("SELECT * FROM sqlite_master").fetchall()
     if len(entities) == 0:
         logger.warning("Database is present but empty")
@@ -28,7 +28,6 @@ def get_connection(db_uri: str) -> Optional[sqlite3.Connection]:
 
 def get_utilities(db: sqlite3.Connection) -> List[str]:
     # CRUD fn for utilities
-
     query = (
         f"SELECT DISTINCT {UTILITY_COL} "
         + f"FROM {PROD_TABLE} "
@@ -36,7 +35,6 @@ def get_utilities(db: sqlite3.Connection) -> List[str]:
     )
     logger.debug(f"Issuing db query: {query}")
     list_of_utility_lists: List[Tuple[str]] = db.execute(query).fetchall()
-    logger.debug(f"Issued db query: {query}")
     # flatten lists
     result = list(chain.from_iterable(list_of_utility_lists))
     return result

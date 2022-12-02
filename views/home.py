@@ -1,11 +1,14 @@
+import logging
 import fastapi
 from starlette.requests import Request
 
 router = fastapi.APIRouter()
 
+logger = logging.getLogger(__name__)
 
 @router.get("/")
 def index():
+    logger.debug('Rendering home page at /')
     body = """
     <html>
     <body style='padding: 10px;'>
