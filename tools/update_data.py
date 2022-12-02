@@ -40,7 +40,7 @@ def get_latest_local_update() -> Optional[date]:
         # file name convention: 2022-11-18_download.json
         latest_data_file = sorted(latest_data, reverse=True)[0].parts[-1]
         latest_date = latest_data_file.split("_")[0]
-        logger.info(f"Latest local file date: {latest_date}")
+        logger.debug(f"Latest local file date: {latest_date}")
         result = parser.parse(latest_date).date()
         return result
 
@@ -48,7 +48,7 @@ def get_latest_local_update() -> Optional[date]:
 def get_latest_portal_update() -> date:
     """Return the latest update date according to the portal metadata API"""
     # fetch portal data metadata json
-    logger.info("Checking for latest update date from portal metadata")
+    logger.debug("Checking for latest update date from portal metadata")
     query = (
         "https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services"
         + "/CDPHE_COVID19_WW_Dashboard_Data_Publish/FeatureServer/0?f=pjson"
@@ -56,7 +56,7 @@ def get_latest_portal_update() -> date:
     data = requests.get(query).json()
     update_epoch_ms = data["editingInfo"]["dataLastEditDate"]
     update = date.fromtimestamp(update_epoch_ms / 1000.0)
-    logger.info(
+    logger.debug(
         f"Latest reported portal data edit date (epoch ms): {update} ({update_epoch_ms})"
     )
     return update
@@ -66,7 +66,7 @@ def fetch_portal_data(last_update: datetime) -> dict:
     """Return (and serialize) the current data available through the portal API"""
     # fetch portal data json; write locally and return
     # https://data-cdphe.opendata.arcgis.com/datasets/CDPHE::cdphe-covid19-wastewater-dashboard-data/about
-    logger.info(f"Fetching new data from portal")
+    logger.debug(f"Fetching new data from portal")
     query = (
         "https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services"
         + "/CDPHE_COVID19_WW_Dashboard_Data_Publish/FeatureServer/0/query"
@@ -82,7 +82,7 @@ def fetch_portal_data(last_update: datetime) -> dict:
 
 def transform_raw_data(raw_data: dict) -> List[dict]:
     """Convert the downloaded data to the format compatible with bulk loading in DB"""
-    logger.info("Transforming raw data to preferred schema")
+    logger.debug("Transforming raw data to preferred schema")
     try:
         features: List[dict] = raw_data["features"]
     except KeyError as ke:
@@ -94,12 +94,13 @@ def transform_raw_data(raw_data: dict) -> List[dict]:
         flat_feature: dict = feature["attributes"]
         del flat_feature["ObjectId"]
         flat_features.append(flat_feature)
-    logger.info(f"Counted {i} observations during transformation")
+    logger.info(f"Counted {i} observations during data transformation")
     return flat_features
 
 
 def update_db(data: List[dict], latest_local: Optional[str]) -> None:
     """Update the db to reflect the latest data, including making a backup table"""
+    logger.debug("Updating local database")
     database = "data/wastewater.db"
     main_table = "latest"
     db = Database(database)
