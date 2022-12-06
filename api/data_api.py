@@ -12,8 +12,9 @@ router = fastapi.APIRouter()
 
 db_conn: Optional[sqlite3.Connection] = db.get_connection("data/wastewater.db")
 
+API_ROOT = "/api/v1"
 
-@router.get("/api/utilities")
+@router.get(f"{API_ROOT}/utilities")
 def utilities():
     if db_conn:
         logger.debug(f"Found db connection, querying utilities")
@@ -27,7 +28,7 @@ def utilities():
     return resp
 
 
-@router.get("/api/samples")
+@router.get(f"{API_ROOT}/samples")
 def samples(report: Report = Depends()):
     if db_conn:
         logger.debug(f"Found db connection, querying samples with {report=}")

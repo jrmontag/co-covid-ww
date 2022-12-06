@@ -12,17 +12,17 @@ def index():
     body = """
     <html>
     <body style='padding: 10px;'>
-    <h1>(eventually) 📱-friendly CO COVID Wasterwater data</h1>
+    <h1>API-based CO COVID Wasterwater data</h1>
     <div>
-    See available reporting utilities: <a href='/api/utilities'>/api/utilities</a>
+    See <a href='/api/v1/utilities'>available reporting utilities</a>
     </div>
     
     <div>
-    Check recent Denver-area wastewater measurements: <a href='/api/samples'>/api/samples</a>
+    Check recent <a href='/api/v1/samples'>Denver-area measurements</a>
     </div>
     
     <div>
-    Check August Boulder-area wastewater measurements: <a href='/api/samples?utility=Boulder&start=2022-08-01&end=2022-08-31'>/api/samples</a>
+    Check <a href='/api/v1/samples?utility=Boulder&start=2022-08-01&end=2022-08-31'>August Boulder-area measurements</a>
     </div>
     </body>
     </html>
