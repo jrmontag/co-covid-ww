@@ -42,6 +42,7 @@ if __name__ == "__main__":
     configure_routing()
     uvicorn.run(api, port=8888, host="127.0.0.1")
 else:
+    # TODO: set this to prod eventually
     logger = configure_logging(env="dev")
-    logger.info("> Starting application from gunicorn")
+    logger.info("> Starting application from systemd and gunicorn")
     configure_routing()

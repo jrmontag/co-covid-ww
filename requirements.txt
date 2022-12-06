@@ -1,3 +1,6 @@
+# server venv is 3.10.6 (via apt-get)
+# local venv is 3.10.8 via pyenv; set up prior to use of make
+
 ## basic requirements.txt
 #wheel
 #datasette

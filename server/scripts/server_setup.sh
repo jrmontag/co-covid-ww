@@ -9,6 +9,7 @@ apt install zsh
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 # Install some OS dependencies:
+# - as of the time of writing this installs python 3.10.6 on the server
 sudo apt-get install -y -q build-essential git unzip zip nload tree
 sudo apt-get install -y -q python3-pip python3-dev python3-venv
 
