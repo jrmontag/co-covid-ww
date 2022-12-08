@@ -6,6 +6,8 @@ This application creates a queryable API for this data at `http://wastewater.jrm
 
 A mobile-friendly Streamlit frontend for this API [can be found here](https://colorado-covid-wastewater.streamlit.app/).
 
+A basic commandline client app to query this API is in `tools/report_app.py` and works within a venv created with the `requirements.txt` in this repo.
+
 There is basic API documentation [available here](http://wastewater.jrmontag.xyz/docs/).
 
 This application is made possible thanks to the lovely Colorado state [Open Data Portal](https://data-cdphe.opendata.arcgis.com/datasets/CDPHE::cdphe-covid19-wastewater-dashboard-data/about).
