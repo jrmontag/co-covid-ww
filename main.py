@@ -10,13 +10,13 @@ from views import home
 from api import data_api
 
 
-api = fastapi.FastAPI()
+app = fastapi.FastAPI()
 
 
 def configure_routing():
-    api.include_router(home.router)
-    api.include_router(data_api.router)
-    api.mount("/static", StaticFiles(directory="static"), name="static")
+    app.include_router(home.router)
+    app.include_router(data_api.router)
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 def configure_logging(env="prod") -> logging.Logger:
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     logger = configure_logging(env="dev")
     logger.info("> Starting application from CLI")
     configure_routing()
-    uvicorn.run(api, port=8888, host="127.0.0.1")
+    uvicorn.run(app, port=8888, host="127.0.0.1")
 else:
     # TODO: set this to prod eventually
     logger = configure_logging(env="dev")
