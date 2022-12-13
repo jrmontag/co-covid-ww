@@ -1,0 +1,31 @@
+{% extends "shared/layout.html" %}
+
+{% block content %}
+
+<h1><span class="font-semi-bold">A Colorado COVID-19 Wastewater RESTful data service</span> </h1>
+<div style="clear:both;"></div>
+<br>
+<br>
+<p class="lead">
+    <i>Providing official <a href="https://cdphe.colorado.gov/">CDPHE</a> data for alternative displays, like <a
+            href="https://colorado-covid-wastewater.streamlit.app/">this mobile-friendly Streamlit app.</a></i>
+    <br> <br>
+    See the <a href="/docs">OpenAPI docs</a> for latest API documentation and example usage.
+    <br> <br>
+    Additional API query examples:
+<ul>
+    <li>
+        <a href='/api/v1/utilities'>Available reporting utilities</a>
+    </li>
+    <li>
+        <a href='/api/v1/samples'>Recent Denver-area measurements</a>
+    </li>
+    <li>
+        <a href='/api/v1/samples?utility=Boulder&start=2022-08-01&end=2022-08-31'>August Boulder-area
+            measurements</a>
+    </li>
+</ul>
+
+</div>
+
+{% endblock %}

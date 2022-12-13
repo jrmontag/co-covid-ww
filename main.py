@@ -1,8 +1,11 @@
 import argparse
 import logging
 from pathlib import Path
+
 import fastapi
+from starlette.staticfiles import StaticFiles
 import uvicorn
+
 from views import home
 from api import data_api
 
@@ -13,6 +16,7 @@ api = fastapi.FastAPI()
 def configure_routing():
     api.include_router(home.router)
     api.include_router(data_api.router)
+    api.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 def configure_logging(env="prod") -> logging.Logger:
