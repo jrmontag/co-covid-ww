@@ -1,42 +1,50 @@
 import logging
-import sqlite3
-from typing import Optional
+from sqlite3 import Connection
+from typing import Iterable
+
 import fastapi
 from fastapi import Depends
+
 from models.report import Report
 from services import db
 
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 router = fastapi.APIRouter()
 
-db_conn: Optional[sqlite3.Connection] = db.get_connection("data/wastewater.db")
-
 API_ROOT = "/api/v1"
+DB_URI = "data/wastewater.db"
+
+
+# dependency
+def get_db_conn():
+    conn = db.get_connection(DB_URI)
+    try:
+        yield conn
+    finally:
+        conn.close()
+
 
 @router.get(f"{API_ROOT}/utilities")
-def utilities():
-    if db_conn:
-        logger.debug(f"Found db connection, querying utilities")
-        results = db.get_utilities(db_conn)
-        resp = {"utilities": results}
-    else:
-        logger.error("Database connection is missing")
+def utilities(conn: Connection = Depends(get_db_conn)):
+    logger.debug(f"Querying utilities")
+    results = db.get_utilities(conn)
+    if len(results) == 0:
         resp = fastapi.Response(
             content="Internal error. Please try again later.", status_code=500
         )
+    else:
+        resp = {"utilities": results}
     return resp
 
 
 @router.get(f"{API_ROOT}/samples")
-def samples(report: Report = Depends()):
-    if db_conn:
-        logger.debug(f"Found db connection, querying samples with {report=}")
-        results = db.get_samples(db_conn, report)
-        resp = {"parameters": report.dict(), "samples": results}
-    else:
-        logger.error("Database connection is missing")
+def samples(report: Report = Depends(), conn: Connection = Depends(get_db_conn)):
+    results = db.get_samples(conn, report)
+    if len(results) == 0:
         resp = fastapi.Response(
             content="Internal error. Please try again later.", status_code=500
         )
+    else:
+        resp = {"parameters": report.dict(), "samples": results}
     return resp
