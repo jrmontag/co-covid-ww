@@ -4,7 +4,14 @@ Sometimes things go awry. Better to have troubleshooting and resolution steps wr
 
 ## Data downloaded from portal is incomplete or corrupt
 
-The new data downloads are typically ~4 MB on disk, comprising about 27,000 observations. If an incomplete new download gets inserted into the database:
+The new data downloads are typically ~4 MB on disk, comprising about 27,000 observations. Sometimes, 
+the open data portal returns a truncated (but still valid JSON) response with an additional 
+`"exceededTransferLimit": true` entry. The 
+[ArcGIS docs suggest](https://resources.arcgis.com/en/help/runtime-wpf/apiref/index.html?ESRI.ArcGIS.Client~ESRI.ArcGIS.Client.FeatureLayer~ExceededTransferLimit.html) 
+that this is tripping some sort of max transfer size check. Unclear why it happens from time to 
+time, but it does.
+
+If an incomplete new download gets inserted into the database:
 
 1. verify the table is different than a recent one
 
