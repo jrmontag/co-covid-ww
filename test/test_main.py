@@ -10,6 +10,7 @@ DEFAULT_UTILITY = "Metro WW - Platte/Central"
 
 logger = configure_logging("dev")
 
+
 # TODO: create an override + tests to verify the status=500 code paths where the conn is bad
 def override_db_conn() -> sqlite3.Connection:
     """Use an in-memory db for API testing"""
@@ -43,7 +44,6 @@ def override_db_conn() -> sqlite3.Connection:
     con.execute(table_create_stmt)
     con.executemany(insert_stmt, test_data)
     logger.debug("created and loaded test db")
-    logger
     return con
 
 
