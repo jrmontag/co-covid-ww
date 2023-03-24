@@ -3,7 +3,7 @@ Description=gunicorn uvicorn service for Wastewater API
 After=syslog.target
 
 [Service]
-ExecStart=/apps/venv/bin/gunicorn -b 127.0.0.1:8888 -w 4 -k uvicorn.workers.UvicornWorker main:api --name wastewater_svc --chdir /apps/app_repo/ --access-logfile /apps/logs/wastewater_api/access.log --error-logfile /apps/logs/wastewater_api/errors.log --user apiuser
+ExecStart=/apps/venv/bin/gunicorn -b 127.0.0.1:8888 -w 4 -k uvicorn.workers.UvicornWorker main:app --name wastewater_svc --chdir /apps/app_repo/ --access-logfile /apps/logs/wastewater_api/access.log --error-logfile /apps/logs/wastewater_api/errors.log --user apiuser
 
 # \/ \/ <- Added post recording for better restart perf.
 ExecReload=/bin/kill -s HUP $MAINPID

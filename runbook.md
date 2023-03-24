@@ -44,3 +44,14 @@ python tools/update_data.py
 ```
 
 6. verify [the streamlit app](https://colorado-covid-wastewater.streamlit.app/) reloads correctly
+
+## Modify systemd service unit and reboot
+
+If changing the service file:
+
+1. `systemctl stop wastewater`
+2. modify `wastewater.service` in repo
+3. copy to `systemd` path as in `server_setup.sh`
+4. run `systemctl daemon-reload`
+5. `systemctl start wastewater`
+

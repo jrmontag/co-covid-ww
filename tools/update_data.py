@@ -68,12 +68,12 @@ def fetch_portal_data(last_update: datetime) -> dict:
     # fetch portal data json, write locally and return
     # source: https://data-cdphe.opendata.arcgis.com/datasets/CDPHE::cdphe-covid19-wastewater-dashboard-data/about
     #
-    # anecdotally, the API truncates response beyond 32000 ObjectIds 
+    # anecdotally, the API truncates response beyond 32000 ObjectIds
     # -> split into two requests, [0 - limit] and (limit - latest]
     # ref: https://developers.arcgis.com/rest/services-reference/enterprise/query-feature-service-layer-.htm
     limit_objects = 20000
     result = dict()
-    for param in ['resultRecordCount', 'resultOffset']:
+    for param in ["resultRecordCount", "resultOffset"]:
         logger.debug(f"Requesting with param={param}, value={limit_objects}")
         query = (
             "https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services"
@@ -81,8 +81,8 @@ def fetch_portal_data(last_update: datetime) -> dict:
             + f"?where=1%3D1&outFields=*&outSR=4326&f=json&{param}={limit_objects}"
         )
         response = requests.get(query).json()
-        if existing_features := result.get('features'):
-            existing_features.extend(response['features'])
+        if existing_features := result.get("features"):
+            existing_features.extend(response["features"])
         else:
             result = response
     logger.debug(f"Total object count: {len(result['features'])}")
