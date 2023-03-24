@@ -64,20 +64,33 @@ def get_latest_portal_update() -> date:
 
 def fetch_portal_data(last_update: datetime) -> dict:
     """Return (and serialize) the current data available through the portal API"""
-    # fetch portal data json; write locally and return
-    # https://data-cdphe.opendata.arcgis.com/datasets/CDPHE::cdphe-covid19-wastewater-dashboard-data/about
     logger.debug(f"Fetching new data from portal")
-    query = (
-        "https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services"
-        + "/CDPHE_COVID19_WW_Dashboard_Data_Publish/FeatureServer/0/query"
-        + "?where=1%3D1&outFields=*&outSR=4326&f=json"
-    )
-    data = requests.get(query).json()
+    # fetch portal data json, write locally and return
+    # source: https://data-cdphe.opendata.arcgis.com/datasets/CDPHE::cdphe-covid19-wastewater-dashboard-data/about
+    #
+    # anecdotally, the API truncates response beyond 32000 ObjectIds 
+    # -> split into two requests, [0 - limit] and (limit - latest]
+    # ref: https://developers.arcgis.com/rest/services-reference/enterprise/query-feature-service-layer-.htm
+    limit_objects = 20000
+    result = dict()
+    for param in ['resultRecordCount', 'resultOffset']:
+        logger.debug(f"Requesting with param={param}, value={limit_objects}")
+        query = (
+            "https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services"
+            + "/CDPHE_COVID19_WW_Dashboard_Data_Publish/FeatureServer/0/query"
+            + f"?where=1%3D1&outFields=*&outSR=4326&f=json&{param}={limit_objects}"
+        )
+        response = requests.get(query).json()
+        if existing_features := result.get('features'):
+            existing_features.extend(response['features'])
+        else:
+            result = response
+    logger.debug(f"Total object count: {len(result['features'])}")
     last_update_date = last_update.strftime("%Y-%m-%d")
     new_local_data = f"data/{last_update_date}_download.json"
-    Path(new_local_data).write_text(json.dumps(data))
+    Path(new_local_data).write_text(json.dumps(result))
     logger.info(f"Wrote backup of fetched data to {new_local_data}")
-    return data
+    return result
 
 
 def transform_raw_data(raw_data: dict) -> List[dict]:
@@ -89,6 +102,8 @@ def transform_raw_data(raw_data: dict) -> List[dict]:
         raise Exception(
             f"Input data did not match expected schema. Observed keys: {raw_data.keys()}"
         )
+    if raw_data.get("exceededTransferLimit"):
+        logger.warning("ArcGiS transfer limit exceeded; results may be truncated")
     flat_features: List[dict] = []
     for i, feature in enumerate(features):
         flat_feature: dict = feature["attributes"]
