@@ -6,6 +6,7 @@
 
 # raw data
 *.json
+*.json.gz
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,virtualenv
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode,virtualenv

@@ -8,6 +8,9 @@ import requests
 from sqlite_utils import Database
 
 
+PORTAL_URL_ROOT = ("https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services" 
+                    + "/CDPHE_COVID19_Wastewater_Dashboard_Data/FeatureServer/0")
+
 def logging_location() -> str:
     log_file = "app.log"
     prod_loc = "/apps/logs/wastewater_api/app_log"
@@ -47,12 +50,10 @@ def get_latest_local_update() -> Optional[date]:
 
 def get_latest_portal_update() -> date:
     """Return the latest update date according to the portal metadata API"""
+    # ref: https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services/CDPHE_COVID19_Wastewater_Dashboard_Data/FeatureServer/0
     # fetch portal data metadata json
     logger.debug("Checking for latest update date from portal metadata")
-    query = (
-        "https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services"
-        + "/CDPHE_COVID19_WW_Dashboard_Data_Publish/FeatureServer/0?f=pjson"
-    )
+    query = PORTAL_URL_ROOT + "?f=pjson"
     data = requests.get(query).json()
     update_epoch_ms = data["editingInfo"]["dataLastEditDate"]
     update = date.fromtimestamp(update_epoch_ms / 1000.0)
@@ -75,11 +76,7 @@ def fetch_portal_data(last_update: datetime) -> dict:
     result = dict()
     for param in ["resultRecordCount", "resultOffset"]:
         logger.debug(f"Requesting with param={param}, value={limit_objects}")
-        query = (
-            "https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services"
-            + "/CDPHE_COVID19_WW_Dashboard_Data_Publish/FeatureServer/0/query"
-            + f"?where=1%3D1&outFields=*&outSR=4326&f=json&{param}={limit_objects}"
-        )
+        query = PORTAL_URL_ROOT + f"/query?where=1%3D1&outFields=*&outSR=4326&f=json&{param}={limit_objects}"
         response = requests.get(query).json()
         if existing_features := result.get("features"):
             existing_features.extend(response["features"])
