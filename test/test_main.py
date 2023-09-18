@@ -19,8 +19,9 @@ def override_db_conn() -> sqlite3.Connection:
     test_cols = [
         "Date",
         "Utility",
-        "SARS_CoV_2_copies_L",
-        "Number_of_New_COVID19_Cases_by_",
+        "SARS_COV_2_Copies_L_LP1",
+        "SARS_COV_2_Copies_L_LP2",
+        "Cases",
     ]
 
     # the default Report range is dynamically (-30d, today) - ensure that
@@ -28,17 +29,17 @@ def override_db_conn() -> sqlite3.Connection:
     today = date.today().isoformat()
     yesterday = (date.today() - timedelta(days=1)).isoformat()
     test_data = [
-        ("2022-03-16", "Arapahoe County", 1, 0),
-        ("2022-03-17", "Arapahoe County", 3, 0),
-        ("2022-03-19", "Arapahoe County", 5, 0),
-        (yesterday, DEFAULT_UTILITY, 3, 0),
-        (today, DEFAULT_UTILITY, 9, 0),
+        ("2022-03-16", "Arapahoe County", 1, 0, 0),
+        ("2022-03-17", "Arapahoe County", 3, 0, 0),
+        ("2022-03-19", "Arapahoe County", 5, 0, 0),
+        (yesterday, DEFAULT_UTILITY, 3, 0, 0),
+        (today, DEFAULT_UTILITY, 9, 0, 0),
     ]
 
     test_table = "latest"
     table_cols = f"{test_table}({','.join(test_cols)})"
     table_create_stmt = f"CREATE TABLE {table_cols}"
-    insert_stmt = f"INSERT INTO {table_cols} VALUES (?, ?, ?, ?)"
+    insert_stmt = f"INSERT INTO {table_cols} VALUES (?, ?, ?, ?, ?)"
 
     con: sqlite3.Connection = sqlite3.connect(":memory:")
     con.execute(table_create_stmt)

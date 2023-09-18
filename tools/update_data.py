@@ -1,3 +1,5 @@
+from ast import main
+import chunk
 from datetime import date, datetime, timedelta
 import json
 import logging
@@ -8,8 +10,11 @@ import requests
 from sqlite_utils import Database
 
 
-PORTAL_URL_ROOT = ("https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services" 
-                    + "/CDPHE_COVID19_Wastewater_Dashboard_Data/FeatureServer/0")
+PORTAL_URL_ROOT = (
+    "https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services"
+    + "/CDPHE_COVID19_Wastewater_Dashboard_Data/FeatureServer/0"
+)
+
 
 def logging_location() -> str:
     log_file = "app.log"
@@ -57,32 +62,41 @@ def get_latest_portal_update() -> date:
     data = requests.get(query).json()
     update_epoch_ms = data["editingInfo"]["dataLastEditDate"]
     update = date.fromtimestamp(update_epoch_ms / 1000.0)
-    logger.debug(
-        f"Latest reported portal data edit date (epoch ms): {update} ({update_epoch_ms})"
-    )
+    logger.debug(f"Latest reported portal data edit date (epoch ms): {update} ({update_epoch_ms})")
     return update
 
 
 def fetch_portal_data(last_update: datetime) -> dict:
     """Return (and serialize) the current data available through the portal API"""
     logger.debug(f"Fetching new data from portal")
-    # fetch portal data json, write locally and return
-    # source: https://data-cdphe.opendata.arcgis.com/datasets/CDPHE::cdphe-covid19-wastewater-dashboard-data/about
-    #
-    # anecdotally, the API truncates response beyond 32000 ObjectIds
-    # -> split into two requests, [0 - limit] and (limit - latest]
-    # ref: https://developers.arcgis.com/rest/services-reference/enterprise/query-feature-service-layer-.htm
-    limit_objects = 20000
+    # the API has a max record count response of 32000 ObjectIds
+    # split into multiple requests of chunk_size
+    # currently ~40k object ids, grows a few hundred with each update
+    # refs:
+    # - https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services/CDPHE_COVID19_Wastewater_Dashboard_Data/FeatureServer/0
+    # - https://developers.arcgis.com/rest/services-reference/enterprise/query-feature-service-layer-.htm
+    chunk_size = 5_000
+    results_cap = 80_000
     result = dict()
-    for param in ["resultRecordCount", "resultOffset"]:
-        logger.debug(f"Requesting with param={param}, value={limit_objects}")
-        query = PORTAL_URL_ROOT + f"/query?where=1%3D1&outFields=*&outSR=4326&f=json&{param}={limit_objects}"
+    offsets = (i * chunk_size for i in range(results_cap // chunk_size))
+    for offset in offsets:
+        logger.debug(f"API request params: {offset=}, {chunk_size=}")
+        query = (
+            PORTAL_URL_ROOT
+            + f"/query?where=1%3D1&outFields=*&outSR=4326&f=json&resultOffset={offset}&resultRecordCount={chunk_size}"
+        )
         response = requests.get(query).json()
         if existing_features := result.get("features"):
             existing_features.extend(response["features"])
         else:
             result = response
+        # short-circuit the loop if we've passed beyond the available record count
+        # (the api will return empty array)
+        if len(response["features"]) == 0:
+            break
     logger.debug(f"Total object count: {len(result['features'])}")
+
+    # side-effect saving latest data
     last_update_date = last_update.strftime("%Y-%m-%d")
     new_local_data = f"data/{last_update_date}_download.json"
     Path(new_local_data).write_text(json.dumps(result))
@@ -100,11 +114,11 @@ def transform_raw_data(raw_data: dict) -> List[dict]:
             f"Input data did not match expected schema. Observed keys: {raw_data.keys()}"
         )
     if raw_data.get("exceededTransferLimit"):
-        logger.warning("ArcGiS transfer limit exceeded; results may be truncated")
+        logger.debug("ArcGiS transfer limit exceeded; results may be truncated")
     flat_features: List[dict] = []
     for i, feature in enumerate(features):
         flat_feature: dict = feature["attributes"]
-        del flat_feature["ObjectId"]
+        del flat_feature["OBJECTID"]
         flat_features.append(flat_feature)
     logger.info(f"Counted {i} observations during data transformation")
     return flat_features
@@ -121,14 +135,23 @@ def update_db(data: List[dict], latest_local: Optional[str]) -> None:
         # move existing content to backup table named by download date
         db.execute(f"ALTER TABLE `{main_table}` RENAME TO `{latest_local}`")
 
-    logger.info(f"Inserting new data to {database=} {main_table=}")
+    logger.info(f"Creating and inserting new data to {database=} {main_table=}")
+    # sqlite-utils incorrectly auto-infers a measurement col as string, so set schema manually
+    db[main_table].create(
+        {
+            "Date": int,
+            "Utility": str,
+            "SARS_COV_2_Copies_L_LP1": float,
+            "SARS_COV_2_Copies_L_LP2": float,
+            "Cases": int,
+            "Lab_Phase": str,
+        }
+    )
     db[main_table].insert_all(records=data)
 
     logger.debug(f"Transforming date to ISO format in {database=} {main_table=}")
-    # MM/DD/YYY -> YYYY-MM-DD
-    db[main_table].convert("Date", lambda val: parser.parse(val).date().isoformat())
-
-    # verify
+    # epoch -> YYYY-MM-DD
+    db[main_table].convert("Date", lambda x: datetime.fromtimestamp(x / 1000.0).date().isoformat())
     names = db.table_names()
     logger.info(f"Table names in current db: {names}")
 
@@ -155,13 +178,15 @@ if __name__ == "__main__":
 
     if (not latest_local_update) or (latest_portal_update > latest_local_update):
         logger.info("Initiating data update")
-        # download new json
         latest_data = fetch_portal_data(latest_portal_update)
-        # adjust json content for db load
         transformed_data = transform_raw_data(latest_data)
-        # update any existing db table, load new data
-        update_db(data=transformed_data, latest_local=local_date)
+        # every so often, the API data source is borked and only returns 2-4k measurements
+        # don't update the DB with that data - the front-end ux is bad
+        # since it's usually fixed within a day or two, we'll just keep the older data as `latest`
+        if len(transformed_data) > 10_000:
+            update_db(data=transformed_data, latest_local=local_date)
+        else:
+            logger.info("Fetched + transformed data is unusually small. Skipping DB update.")
     else:
         logger.info(f"Not updating local data files")
-
     logger.info("Completed run of data check/fetch")
