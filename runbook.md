@@ -45,6 +45,28 @@ python tools/update_data.py
 
 6. verify [the streamlit app](https://colorado-covid-wastewater.streamlit.app/) reloads correctly
 
+## Walk through `__main__` steps manually
+
+From a fresh ipython repl in the venv
+```python
+from tools.update_data import *
+from sqlite_utils.utils import sqlite3
+from datetime import datetime
+from dateutil import parser
+from pathlib import Path
+
+sqlite3.enable_callback_tracebacks(True)
+latest_local_update = parser.parse('2023-09-09').date()
+latest_portal_update = get_latest_portal_update()
+download = 'data/2023-09-11_download.json'
+raw_data = json.loads(Path(download).read_text())
+xformed_data = transform_raw_data(raw_data)
+database = "data/wastewater.db"
+main_table = "latest"
+db = Database(database)
+db[main_table].insert_all(records=xformed_data)
+```
+
 ## Modify systemd service unit and reboot
 
 If changing the service file:

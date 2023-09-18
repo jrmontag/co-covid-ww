@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 # DB conventions
 PROD_TABLE = "latest"
 DATE_COL = "Date"
-SAMPLES_COL = "SARS_CoV_2_copies_L"
+SAMPLES_COLS = ["SARS_COV_2_Copies_L_LP1", "SARS_COV_2_Copies_L_LP2"]
 UTILITY_COL = "Utility"
 
 
@@ -28,9 +28,7 @@ def get_connection(db_uri: str) -> sqlite3.Connection:
 def get_utilities(conn: sqlite3.Connection) -> List[str]:
     # CRUD fn for utilities
     query = (
-        f"SELECT DISTINCT {UTILITY_COL} "
-        + f"FROM {PROD_TABLE} "
-        + f"ORDER BY {UTILITY_COL} ASC"
+        f"SELECT DISTINCT {UTILITY_COL} " + f"FROM {PROD_TABLE} " + f"ORDER BY {UTILITY_COL} ASC"
     )
     logger.debug(f"Issuing db query: {query}")
     list_of_utility_lists: List[Tuple[str]] = conn.execute(query).fetchall()
@@ -42,7 +40,7 @@ def get_utilities(conn: sqlite3.Connection) -> List[str]:
 def get_samples(conn: sqlite3.Connection, report: Report = Depends()) -> List[str]:
     # CRUD fn for samples
     # notes on sqlite quoting and keywords: https://www.sqlite.org/lang_keywords.html
-    cols = f"{DATE_COL}, {SAMPLES_COL}"
+    cols = f"{DATE_COL}, {','.join(SAMPLES_COLS)}"
     condition = (
         f"{UTILITY_COL} = '{report.utility}' "
         + f"AND {DATE_COL} >= '{report.start}' "

@@ -30,9 +30,7 @@ def utilities(conn: Connection = Depends(get_db_conn)):
     logger.debug(f"Querying utilities")
     results = db.get_utilities(conn)
     if len(results) == 0:
-        resp = fastapi.Response(
-            content="Internal error. Please try again later.", status_code=500
-        )
+        resp = fastapi.Response(content="Internal error. Please try again later.", status_code=500)
     else:
         resp = {"utilities": results}
     return resp
@@ -42,9 +40,10 @@ def utilities(conn: Connection = Depends(get_db_conn)):
 def samples(report: Report = Depends(), conn: Connection = Depends(get_db_conn)):
     results = db.get_samples(conn, report)
     if len(results) == 0:
-        resp = fastapi.Response(
-            content="Internal error. Please try again later.", status_code=500
-        )
+        resp = fastapi.Response(content="Internal error. Please try again later.", status_code=500)
     else:
         resp = {"parameters": report.dict(), "samples": results}
     return resp
+
+
+# TODO: endpoint for last_checked and last_data_update
