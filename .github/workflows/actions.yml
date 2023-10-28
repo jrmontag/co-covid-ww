@@ -20,4 +20,4 @@ jobs:
       - name: Format with black
         uses: psf/black@stable
         with: 
-          options: "--check --verbose"
+          options: "--check --verbose -l 100"

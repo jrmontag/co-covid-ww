@@ -44,6 +44,3 @@ def samples(report: Report = Depends(), conn: Connection = Depends(get_db_conn))
     else:
         resp = {"parameters": report.dict(), "samples": results}
     return resp
-
-
-# TODO: endpoint for last_checked and last_data_update
