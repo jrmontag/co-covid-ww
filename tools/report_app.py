@@ -26,9 +26,7 @@ def main():
             if utility not in utilities:
                 print(f"Invalid utility: {utility}. Please try again.")
                 break
-            lookback: str = input(
-                "Select lookback period: [3] mo, [12] mo, [a]ll time: "
-            )
+            lookback: str = input("Select lookback period: [3] mo, [12] mo, [a]ll time: ")
             end = date.today()
             match lookback:
                 case "3" | "12":
@@ -39,9 +37,7 @@ def main():
                     print(f"Invalid lookback: {lookback}")
                     break
             start = end - diff
-            param_query = (
-                f"?utility={utility}&start={start.isoformat()}&end={end.isoformat()}"
-            )
+            param_query = f"?utility={utility}&start={start.isoformat()}&end={end.isoformat()}"
             resp = requests.get(SAMPLES_PATH + param_query).json()
             cleaned_result = [data for data in resp["samples"] if data[1] is not None]
             pprint(cleaned_result)
