@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 # DB conventions
 PROD_TABLE = "latest"
 DATE_COL = "Date"
-SAMPLES_COLS = ["SARS_COV_2_Copies_L_LP1", "SARS_COV_2_Copies_L_LP2"]
+SAMPLES_COLS = ["SARS_COV_2_Copies_L_LP2", "SARS_COV_2_Copies_L_LP1"]
 UTILITY_COL = "Utility"
 
 
