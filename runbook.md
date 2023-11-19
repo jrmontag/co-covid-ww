@@ -43,7 +43,23 @@ sqlite-utils tables wastewater.db --table
 python tools/update_data.py
 ```
 
-6. verify [the streamlit app](https://colorado-covid-wastewater.streamlit.app/) reloads correctly
+or 
+
+copy the contents of a previous table into `latest`
+
+```bash
+sqlite-utils duplicate wastewater.db 2023-11-09 latest
+```
+
+6. inspect relevant data table
+
+```bash
+sqlite-utils query wastewater.db "select * from 'latest' where Utility like '%Central%' order by Date desc limit 15" --table
+```
+
+7. verify [the streamlit app](https://colorado-covid-wastewater.streamlit.app/) reloads correctly
+
+
 
 ## Walk through `__main__` steps manually
 

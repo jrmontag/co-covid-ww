@@ -16,7 +16,7 @@ PORTAL_URL_ROOT = (
 )
 
 # see docstring for fetch_portal_data
-PARTIAL_UPDATE_THRESHOLD = 25_000
+PARTIAL_UPDATE_THRESHOLD = 45_000
 
 
 def logging_location() -> str:
@@ -76,7 +76,8 @@ def fetch_portal_data(last_update: datetime) -> dict:
     # "fun" quirks:
     # - the state's API has a max record count response of 32000 ObjectIds
     # split into multiple requests of chunk_size
-    # currently ~40k object ids, grows a few hundred with each update
+    # currently ~48k object ids, grows a few hundred with each update
+    # set PARTIAL_UPDATE_THRESHOLD accordingly
     # refs:
     # https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services/
     # CDPHE_COVID19_Wastewater_Dashboard_Data/FeatureServer/0
