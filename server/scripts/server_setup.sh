@@ -78,4 +78,4 @@ certbot --nginx -d wastewater.jrmontag.xyz
 # Set data generation process in root crontab
 crontab -e
 # m h  dom mon dow   command
-15 0 * * * cd /apps/app_repo && . ../venv/bin/activate && python tools/update_data.py
+15 0 * * * cd /apps/app_repo && . ../venv/bin/activate && python tools/update_data.py >>data/cron.log 2>&1
