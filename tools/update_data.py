@@ -67,7 +67,7 @@ def get_latest_portal_update() -> date:
     query = PORTAL_URL_ROOT + "?f=pjson"
     data = requests.get(query).json()
     if data.get("error"):
-        raise Exception(f"Error fetching portal metadata. Response: {response}")
+        raise Exception(f"Error fetching portal metadata. Response: {data}")
     update_epoch_ms = data["editingInfo"]["dataLastEditDate"]
     update = date.fromtimestamp(update_epoch_ms / 1000.0)
     logger.debug(f"Latest reported portal data edit date (epoch ms): {update} ({update_epoch_ms})")
