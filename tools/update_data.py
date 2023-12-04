@@ -10,9 +10,11 @@ import requests
 from sqlite_utils import Database
 
 
+# dataset landing page > View Table > More info >
+# I want to use this... > View Data Source
 PORTAL_URL_ROOT = (
     "https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services"
-    + "/CDPHE_COVID19_Wastewater_Dashboard_Data/FeatureServer/0"
+    + "/CDPHE_COVID19_Wastewater_Data/FeatureServer/1"
 )
 
 # see docstring for fetch_portal_data
@@ -64,6 +66,8 @@ def get_latest_portal_update() -> date:
     logger.debug("Checking for latest update date from portal metadata")
     query = PORTAL_URL_ROOT + "?f=pjson"
     data = requests.get(query).json()
+    if data.get("error"):
+        raise Exception(f"Error fetching portal metadata. Response: {data}")
     update_epoch_ms = data["editingInfo"]["dataLastEditDate"]
     update = date.fromtimestamp(update_epoch_ms / 1000.0)
     logger.debug(f"Latest reported portal data edit date (epoch ms): {update} ({update_epoch_ms})")
