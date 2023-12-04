@@ -14,7 +14,7 @@ from sqlite_utils import Database
 # I want to use this... > View Data Source
 PORTAL_URL_ROOT = (
     "https://services3.arcgis.com/66aUo8zsujfVXRIT/arcgis/rest/services"
-    + "/CDPHE_COVID19_Wastewater_Foo_Data/FeatureServer/1"
+    + "/CDPHE_COVID19_Wastewater_Data/FeatureServer/1"
 )
 
 # see docstring for fetch_portal_data
