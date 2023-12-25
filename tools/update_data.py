@@ -1,5 +1,5 @@
-from ast import main
-import chunk
+import argparse
+from csv import DictReader
 from datetime import date, datetime, timedelta
 import json
 import logging
@@ -9,6 +9,11 @@ from dateutil import parser
 import requests
 from sqlite_utils import Database
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--csv", help="filepath to csv data file")
+parser.add_argument("--json", help="filepath to json data file")
+args = parser.parse_args()
 
 # dataset landing page > View Table > More info >
 # I want to use this... > View Data Source
@@ -126,8 +131,8 @@ def fetch_portal_data(last_update: datetime) -> dict:
     return result
 
 
-def transform_raw_data(raw_data: dict) -> List[dict]:
-    """Convert the downloaded data to the format compatible with bulk loading in DB"""
+def transform_raw_json_data(raw_data: dict) -> List[dict]:
+    """Convert the downloaded JSON data to the format compatible with bulk loading in DB"""
     logger.debug("Transforming raw data to preferred schema")
     try:
         features: List[dict] = raw_data["features"]
@@ -144,6 +149,51 @@ def transform_raw_data(raw_data: dict) -> List[dict]:
         flat_features.append(flat_feature)
     logger.info(f"Counted {i} observations during data transformation")
     return flat_features
+
+
+def update_db_from_json_file(data_file: str) -> None:
+    """Manually run a db update from a local JSON download"""
+    logger.info(f"Initiating database update from local JSON: {data_file}")
+    raw_data = json.loads(Path(data_file).read_text())
+    xformed_data = transform_raw_json_data(raw_data)
+    tmp_date = (date.today() - timedelta(days=1)).isoformat()
+    update_db(data=xformed_data, latest_local=tmp_date)
+
+
+# TODO: consistent date transformations upstream of update_db (remove)
+def transform_raw_csv_data(csv_row: dict) -> dict:
+    """Adjust the dict to match the expected schema defined in update_db."""
+    # date string -> epoch ms
+    # upstream format doesn't match a python formatter without slight mod
+    raw_dt = csv_row["Date"]
+    mod_dt = raw_dt + "00"
+    input_format = "%Y/%m/%d %H:%M:%S%z"
+    dt = datetime.strptime(mod_dt, input_format)
+    epoch_ms = int(dt.timestamp() * 1000.0)
+    csv_row["Date"] = epoch_ms
+    # drop unused field
+    del csv_row["OBJECTID"]
+    # cast numeric vals (match schema in update_db)
+    for k in ["SARS_COV_2_Copies_L_LP1", "SARS_COV_2_Copies_L_LP2"]:
+        try:
+            csv_row[k] = float(csv_row[k])
+        except ValueError:
+            csv_row[k] = None
+    csv_row["Cases"] = int(csv_row["Cases"])
+    return csv_row
+
+
+def update_db_from_csv_file(data_file: str) -> None:
+    """Manually run a db update from a local CSV download"""
+    logger.info(f"Initiating database update from local csv: {data_file}")
+    # read csv with stdlib csv module
+    xformed_data = []
+    with open(data_file, encoding="utf-8-sig", mode="r") as f:
+        reader = DictReader(f)
+        for row in reader:
+            xformed_data.append(transform_raw_csv_data(row))
+    tmp_date = (date.today() - timedelta(days=1)).isoformat()
+    update_db(data=xformed_data, latest_local=tmp_date)
 
 
 def update_db(data: List[dict], latest_local: Optional[str]) -> None:
@@ -178,36 +228,32 @@ def update_db(data: List[dict], latest_local: Optional[str]) -> None:
     logger.info(f"Table names in current db: {names}")
 
 
-def update_db_from_file(download: str) -> None:
-    """Manually run a db update from a local download"""
-    logger.info(f"Initiating database update from local file: {download}")
-    raw_data = json.loads(Path(download).read_text())
-    xformed_data = transform_raw_data(raw_data)
-    tmp_date = (date.today() - timedelta(days=1)).isoformat()
-    update_db(data=xformed_data, latest_local=tmp_date)
-
-
 if __name__ == "__main__":
-    logger.info("> Starting new run of data check/fetch")
-    latest_local_update: Optional[date] = get_latest_local_update()
-    latest_portal_update: date = get_latest_portal_update()
-
-    # simpler logs
-    local_date = latest_local_update.isoformat() if latest_local_update else None
-    portal_date = latest_portal_update.isoformat()
-    comparison = f"portal date (local date): {portal_date} ({local_date})"
-    logger.info(f"Observed latest updates -> {comparison}")
-
-    if (not latest_local_update) or (latest_portal_update > latest_local_update):
-        logger.info("Initiating data update")
-        latest_data = fetch_portal_data(latest_portal_update)
-        transformed_data = transform_raw_data(latest_data)
-        # don't update the DB with partial data - the front-end ux is bad
-        # see docstring for fetch_portal_data
-        if len(transformed_data) > PARTIAL_UPDATE_THRESHOLD:
-            update_db(data=transformed_data, latest_local=local_date)
-        else:
-            logger.info("Fetched + transformed data is unusually small. Skipping DB update.")
+    if args.csv:
+        update_db_from_csv_file(args.csv)
+    elif args.json:
+        update_db_from_json_file(args.json)
     else:
-        logger.info(f"Not updating local data files")
+        logger.info("> Starting new run of data check/fetch")
+        latest_local_update: Optional[date] = get_latest_local_update()
+        latest_portal_update: date = get_latest_portal_update()
+
+        # simpler logs
+        local_date = latest_local_update.isoformat() if latest_local_update else None
+        portal_date = latest_portal_update.isoformat()
+        comparison = f"portal date (local date): {portal_date} ({local_date})"
+        logger.info(f"Observed latest updates -> {comparison}")
+
+        if (not latest_local_update) or (latest_portal_update > latest_local_update):
+            logger.info("Initiating data update")
+            latest_data = fetch_portal_data(latest_portal_update)
+            transformed_data = transform_raw_json_data(latest_data)
+            # don't update the DB with partial data - the front-end ux is bad
+            # see docstring for fetch_portal_data
+            if len(transformed_data) > PARTIAL_UPDATE_THRESHOLD:
+                update_db(data=transformed_data, latest_local=local_date)
+            else:
+                logger.info("Fetched + transformed data is unusually small. Skipping DB update.")
+        else:
+            logger.info(f"Not updating local data files")
     logger.info("Completed run of data check/fetch")

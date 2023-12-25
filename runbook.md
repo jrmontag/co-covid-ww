@@ -2,14 +2,17 @@
 
 Sometimes things go awry. Better to have troubleshooting and resolution steps written down.
 
-## Data downloaded from portal is incomplete or corrupt
+## Manually update data from JSON API
 
-The new data downloads are typically ~4 MB on disk, comprising about 27,000 observations. Sometimes, 
+The new data downloads are typically ~13 MB JSON on disk, comprising about 50k observations. Sometimes, 
 the open data portal returns a truncated (but still valid JSON) response with an additional 
 `"exceededTransferLimit": true` entry. The 
 [ArcGIS docs suggest](https://resources.arcgis.com/en/help/runtime-wpf/apiref/index.html?ESRI.ArcGIS.Client~ESRI.ArcGIS.Client.FeatureLayer~ExceededTransferLimit.html) 
 that this is tripping some sort of max transfer size check. Unclear why it happens from time to 
 time, but it does.
+
+The general approach for this app is to upload the entire (new) dataset to a new `latest` table each time, 
+moving the previous version to a dated table.
 
 If an incomplete new download gets inserted into the database:
 
@@ -18,6 +21,7 @@ If an incomplete new download gets inserted into the database:
 ```bash
 sqlite-utils tables wastewater.db --table
 sqlite-utils query wastewater.db "select count(*) from latest" --table
+sqlite-utils query wastewater.db "select * from latest where SARS_COV_2_Copies_L_LP2 is not NULL order by Date desc limit 10" --table
 sqlite-utils query wastewater.db "select count(*) from '2022-12-05'" --table
 ```
 
@@ -58,6 +62,15 @@ sqlite-utils query wastewater.db "select * from 'latest' where Utility like '%Ce
 ```
 
 7. verify [the streamlit app](https://colorado-covid-wastewater.streamlit.app/) reloads correctly
+
+
+## Manually update data from CSV download
+
+CDPHE API returns JSON, but sometimes the API is just stubborn and won't return all the data for weeks on end. Or maybe they changed the way the API works. Who knows. Regardless the available CSV download seems updated, however some of the data fields are in different formats because why not.
+
+1. download csv from cdphe
+2. point update_data.py to csv (or use upload method from repl) 
+``$ python tools/update_data.py --csv data/2023-12-23_download.csv``
 
 
 
