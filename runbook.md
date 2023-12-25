@@ -68,9 +68,11 @@ sqlite-utils query wastewater.db "select * from 'latest' where Utility like '%Ce
 
 CDPHE API returns JSON, but sometimes the API is just stubborn and won't return all the data for weeks on end. Or maybe they changed the way the API works. Who knows. Regardless the available CSV download seems updated, however some of the data fields are in different formats because why not.
 
-1. download csv from cdphe
-2. point update_data.py to csv (or use upload method from repl) 
-``$ python tools/update_data.py --csv data/2023-12-23_download.csv``
+1. download csv from cdphe [here](https://data-cdphe.opendata.arcgis.com/datasets/cdphe-covid19-wastewater-dashboard-data/explore) to e.g. repo `data/`
+    - if appropriate, download locally and `scp` csv to vps
+2. run update script pointing to csv (or use upload method from repl) 
+``(env) $ python tools/update_data.py --csv data/2023-12-23_download.csv``
+3. restart app 
 
 
 
