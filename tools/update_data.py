@@ -5,7 +5,7 @@ import json
 import logging
 from pathlib import Path
 from typing import List, Optional
-from dateutil import parser
+from dateutil import parser as date_parser
 import requests
 from sqlite_utils import Database
 
@@ -59,7 +59,7 @@ def get_latest_local_update() -> Optional[date]:
         latest_data_file = sorted(latest_data, reverse=True)[0].parts[-1]
         latest_date = latest_data_file.split("_")[0]
         logger.debug(f"Latest local file date: {latest_date}")
-        result = parser.parse(latest_date).date()
+        result = date_parser.parse(latest_date).date()
         return result
 
 
