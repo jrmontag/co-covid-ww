@@ -49,14 +49,16 @@ def get_latest_local_update() -> Optional[date]:
     logger.debug("Checking for latest local update")
     # assumes cwd = repo root
     data_dir = Path.cwd() / "data"
-    # file name convention: 2022-11-18_download.json
+    # file name convention: 2022-11-18_download.(json|csv)
     # must match naming convention in fetch fn!
-    latest_data = list(Path(data_dir).glob("*_download.json"))
-    if len(latest_data) == 0:
+    present_json = list(Path(data_dir).glob("*_download.json"))
+    present_csv = list(Path(data_dir).glob("*_download.csv"))
+    present_data = present_json + present_csv
+    if len(present_data) == 0:
         logger.warning(f"Found no local data files in {Path(data_dir)}")
         return None
     else:
-        latest_data_file = sorted(latest_data, reverse=True)[0].parts[-1]
+        latest_data_file = sorted(present_data, reverse=True)[0].parts[-1]
         latest_date = latest_data_file.split("_")[0]
         logger.debug(f"Latest local file date: {latest_date}")
         result = date_parser.parse(latest_date).date()
@@ -79,7 +81,7 @@ def get_latest_portal_update() -> date:
     return update
 
 
-def fetch_portal_data(last_update: datetime) -> dict:
+def fetch_portal_json_data(last_update: datetime) -> dict:
     """Return (and serialize) the current data available through the portal API"""
     logger.debug(f"Fetching new data from portal")
     # "fun" quirks:
@@ -158,6 +160,25 @@ def update_db_from_json_file(data_file: str) -> None:
     xformed_data = transform_raw_json_data(raw_data)
     tmp_date = (date.today() - timedelta(days=1)).isoformat()
     update_db(data=xformed_data, latest_local=tmp_date)
+
+
+def fetch_portal_csv_data() -> str | None:
+    logging.info("Attempting to fetch CSV data from portal")
+    # from dev tools network inspection of download page
+    url = (
+        "https://opendata.arcgis.com/api/v3/datasets"
+        "/2d227e6c65f0450cb39759612cda5e9e_1/downloads"
+        "/data?format=csv&spatialRefId=4326&where=1=1"
+    )
+    response = requests.get(url)
+    if response.status_code == 200:
+        filepath = f"data/{date.today().isoformat()}_download.csv"
+        logging.debug(f"Writing fetched data to {filepath}")
+        with open(filepath, "wb") as f:
+            f.write(response.content)
+        return filepath
+    else:
+        return None
 
 
 # TODO: consistent date transformations upstream of update_db (remove)
@@ -246,14 +267,20 @@ if __name__ == "__main__":
 
         if (not latest_local_update) or (latest_portal_update > latest_local_update):
             logger.info("Initiating data update")
-            latest_data = fetch_portal_data(latest_portal_update)
+            latest_data = fetch_portal_json_data(latest_portal_update)
             transformed_data = transform_raw_json_data(latest_data)
             # don't update the DB with partial data - the front-end ux is bad
             # see docstring for fetch_portal_data
             if len(transformed_data) > PARTIAL_UPDATE_THRESHOLD:
                 update_db(data=transformed_data, latest_local=local_date)
             else:
-                logger.info("Fetched + transformed data is unusually small. Skipping DB update.")
+                logger.info("Fetched + transformed data is unusually small - skipping update.")
+                # try csv update
+                if csv_file := fetch_portal_csv_data():
+                    update_db_from_csv_file(csv_file)
+                    logging.info("Updated DB from CSV import")
+                else:
+                    logger.info("CSV portal fetch unsuccessful")
         else:
             logger.info(f"Not updating local data files")
     logger.info("Completed run of data check/fetch")
