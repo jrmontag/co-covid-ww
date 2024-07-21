@@ -192,11 +192,7 @@ def fetch_portal_csv_data() -> str | None:
 def transform_raw_csv_data(csv_row: dict) -> dict:
     """Adjust the dict to match the expected schema defined in update_db."""
     # date string -> epoch ms
-    # upstream format doesn't match a python formatter without slight mod
     raw_dt = csv_row[CdpheObservation.DATE.value]
-    # mod_dt = raw_dt + "00"
-    # input_format = "%Y/%m/%d %H:%M:%S%z"
-    # dt = datetime.strptime(mod_dt, input_format)
     dt = date_parser.parse(raw_dt)
     epoch_ms = int(dt.timestamp() * 1000.0)
     csv_row[CdpheObservation.DATE.value] = epoch_ms
