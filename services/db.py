@@ -1,19 +1,19 @@
 from itertools import chain
-import json
 import logging
-from pathlib import Path
 import sqlite3
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 from fastapi import Depends
+
+from models.observation import CdpheObservation
 from models.report import Report
 
 logger = logging.getLogger(__name__)
 
 # DB conventions
 PROD_TABLE = "latest"
-DATE_COL = "Date"
-SAMPLES_COLS = ["SARS_COV_2_Copies_L_LP2", "SARS_COV_2_Copies_L_LP1"]
-UTILITY_COL = "Utility"
+DATE_COL = CdpheObservation.DATE.value
+SAMPLES_COLS = [CdpheObservation.COPIES_LP2.value, CdpheObservation.COPIES_LP1.value]
+UTILITY_COL = CdpheObservation.UTILITY.value
 
 
 def get_connection(db_uri: str) -> sqlite3.Connection:

@@ -4,11 +4,18 @@ from datetime import date, datetime, timedelta
 import json
 import logging
 from pathlib import Path
+import sys
 from typing import List, Optional
+
 from dateutil import parser as date_parser
 import requests
 from sqlite_utils import Database
 
+# enable the script to have access to other modules
+project_root = Path(__file__).resolve().parent.parent
+sys.path.append(str(project_root))
+
+from models.observation import CdpheObservation
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--csv", help="filepath to csv data file")
@@ -186,21 +193,22 @@ def transform_raw_csv_data(csv_row: dict) -> dict:
     """Adjust the dict to match the expected schema defined in update_db."""
     # date string -> epoch ms
     # upstream format doesn't match a python formatter without slight mod
-    raw_dt = csv_row["Date"]
-    mod_dt = raw_dt + "00"
-    input_format = "%Y/%m/%d %H:%M:%S%z"
-    dt = datetime.strptime(mod_dt, input_format)
+    raw_dt = csv_row[CdpheObservation.DATE.value]
+    # mod_dt = raw_dt + "00"
+    # input_format = "%Y/%m/%d %H:%M:%S%z"
+    # dt = datetime.strptime(mod_dt, input_format)
+    dt = date_parser.parse(raw_dt)
     epoch_ms = int(dt.timestamp() * 1000.0)
-    csv_row["Date"] = epoch_ms
+    csv_row[CdpheObservation.DATE.value] = epoch_ms
     # drop unused field
-    del csv_row["OBJECTID"]
+    del csv_row[CdpheObservation.OBJECTID.value]
     # cast numeric vals (match schema in update_db)
-    for k in ["SARS_COV_2_Copies_L_LP1", "SARS_COV_2_Copies_L_LP2"]:
+    for k in [CdpheObservation.COPIES_LP1.value, CdpheObservation.COPIES_LP2.value]:
         try:
             csv_row[k] = float(csv_row[k])
         except ValueError:
             csv_row[k] = None
-    csv_row["Cases"] = int(csv_row["Cases"])
+    csv_row[CdpheObservation.CASES.value] = int(csv_row[CdpheObservation.CASES.value])
     return csv_row
 
 
@@ -232,19 +240,21 @@ def update_db(data: List[dict], latest_local: Optional[str]) -> None:
     # sqlite-utils incorrectly auto-infers a measurement col as string, so set schema manually
     db[main_table].create(
         {
-            "Date": int,
-            "Utility": str,
-            "SARS_COV_2_Copies_L_LP1": float,
-            "SARS_COV_2_Copies_L_LP2": float,
-            "Cases": int,
-            "Lab_Phase": str,
+            CdpheObservation.DATE.value: int,
+            CdpheObservation.UTILITY.value: str,
+            CdpheObservation.COPIES_LP1.value: float,
+            CdpheObservation.COPIES_LP2.value: float,
+            CdpheObservation.CASES.value: int,
+            CdpheObservation.PHASE.value: str,
         }
     )
     db[main_table].insert_all(records=data)
 
     logger.debug(f"Transforming date to ISO format in {database=} {main_table=}")
     # epoch -> YYYY-MM-DD
-    db[main_table].convert("Date", lambda x: datetime.fromtimestamp(x / 1000.0).date().isoformat())
+    db[main_table].convert(
+        CdpheObservation.DATE.value, lambda x: datetime.fromtimestamp(x / 1000.0).date().isoformat()
+    )
     names = db.table_names()
     logger.info(f"Table names in current db: {names}")
 
