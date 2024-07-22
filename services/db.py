@@ -16,6 +16,11 @@ SAMPLES_COLS = [CdpheObservation.COPIES_LP2.value, CdpheObservation.COPIES_LP1.v
 UTILITY_COL = CdpheObservation.UTILITY.value
 
 
+def double_quote(name: str) -> str:
+    # manually double-quote col names
+    return f'"{name}"'
+
+
 def get_connection(db_uri: str) -> sqlite3.Connection:
     conn = sqlite3.connect(db_uri, check_same_thread=False)
     # metadata table that includes tables and indexs in the db
@@ -40,7 +45,7 @@ def get_utilities(conn: sqlite3.Connection) -> List[str]:
 def get_samples(conn: sqlite3.Connection, report: Report = Depends()) -> List[str]:
     # CRUD fn for samples
     # notes on sqlite quoting and keywords: https://www.sqlite.org/lang_keywords.html
-    cols = f"{DATE_COL}, {','.join(SAMPLES_COLS)}"
+    cols = f"{DATE_COL}, {','.join([double_quote(col) for col in SAMPLES_COLS])}"
     condition = (
         f"{UTILITY_COL} = '{report.utility}' "
         + f"AND {DATE_COL} >= '{report.start}' "

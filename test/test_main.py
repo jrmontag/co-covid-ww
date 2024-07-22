@@ -5,22 +5,25 @@ from fastapi.testclient import TestClient
 
 from main import app, configure_logging
 from api.data_api import get_db_conn, API_ROOT
+from models.observation import CdpheObservation
 
 DEFAULT_UTILITY = "Metro WW - Platte/Central"
 
 logger = configure_logging("dev")
 
+def double_quote(name: str) -> str:
+    # manually double-quote col names
+    return f'"{name}"'
 
 def override_db_conn() -> sqlite3.Connection:
     """Use an in-memory db for API testing"""
     # load some test data into a db and table that match prod names
-    # (note: TBD )
     test_cols = [
-        "Date",
-        "Utility",
-        "SARS_COV_2_Copies_L_LP1",
-        "SARS_COV_2_Copies_L_LP2",
-        "Cases",
+        CdpheObservation.DATE.value,
+        CdpheObservation.UTILITY.value,
+        CdpheObservation.COPIES_LP1.value,
+        CdpheObservation.COPIES_LP2.value,
+        CdpheObservation.CASES.value,
     ]
 
     # the default Report range is dynamically (-30d, today) - ensure that
@@ -34,11 +37,11 @@ def override_db_conn() -> sqlite3.Connection:
         (yesterday, DEFAULT_UTILITY, 3, 0, 0),
         (today, DEFAULT_UTILITY, 9, 0, 0),
     ]
-
+    
     test_table = "latest"
-    table_cols = f"{test_table}({','.join(test_cols)})"
-    table_create_stmt = f"CREATE TABLE {table_cols}"
-    insert_stmt = f"INSERT INTO {table_cols} VALUES (?, ?, ?, ?, ?)"
+    table_and_cols = f"{test_table}({','.join([double_quote(col) for col in test_cols])})"
+    table_create_stmt = f"CREATE TABLE {table_and_cols}"
+    insert_stmt = f"INSERT INTO {table_and_cols} VALUES (?, ?, ?, ?, ?)"
 
     con: sqlite3.Connection = sqlite3.connect(":memory:")
     con.execute(table_create_stmt)
