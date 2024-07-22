@@ -11,9 +11,11 @@ DEFAULT_UTILITY = "Metro WW - Platte/Central"
 
 logger = configure_logging("dev")
 
+
 def double_quote(name: str) -> str:
     # manually double-quote col names
     return f'"{name}"'
+
 
 def override_db_conn() -> sqlite3.Connection:
     """Use an in-memory db for API testing"""
@@ -37,7 +39,7 @@ def override_db_conn() -> sqlite3.Connection:
         (yesterday, DEFAULT_UTILITY, 3, 0, 0),
         (today, DEFAULT_UTILITY, 9, 0, 0),
     ]
-    
+
     test_table = "latest"
     table_and_cols = f"{test_table}({','.join([double_quote(col) for col in test_cols])})"
     table_create_stmt = f"CREATE TABLE {table_and_cols}"
