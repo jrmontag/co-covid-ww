@@ -1,3 +1,8 @@
+> [!NOTE]
+> This backend API and the associated frontend have been deprecated - it was too costly to handle breaking changes from the data source. Those interested in the data and trends should refer to the current CDPHE dashboard ([here](https://cdphe.colorado.gov/dcphr/wastewater#dboard1) as of the time of writing) or other data available via the main CDPHE site. 
+
+---
+
 # Queryable Colorado COVID wastewater data
 
 The state has [an arcgis dashboard](https://cdphe.maps.arcgis.com/apps/dashboards/d79cf93c3938470ca4bcc4823328946b) that's pretty sweet if you have a computer. It is also a bit heavy and clunky for mobile users (ok, it's actually *terrible* for mobile users). 
